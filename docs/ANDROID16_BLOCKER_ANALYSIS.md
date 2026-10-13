@@ -50,3 +50,14 @@ Separately, target SDK 12 is below the minimum accepted for ordinary installatio
 **Not yet established:** whether the original app launches on the user's Android 16 device, whether any official compatible AIR SDK can build the app, and whether proprietary ANE sources/ARM64 builds are obtainable.
 
 **No ARM64 APK has been built or tested.** Next practical gate is an actual install/launch log from the target device plus provenance/source availability for the three ANEs.
+
+## Current AIR SDK route (research update)
+
+A modern AIR SDK is available from HARMAN (the current download page lists AIR SDK 51.4). The AIR toolchain can package ARM64 applications, but every native ANE used by the app must provide the matching `Android-ARM64` implementation; SDK packaging cannot translate ELF32 native code into AArch64. The official AIR SDK documentation describes platform-specific ANE payloads and the `armv8` package architecture.
+
+References:
+- HARMAN AIR SDK downloads: https://airsdk.harman.com/download
+- AIR SDK ANE platform requirements: https://airsdk.dev/docs/building/using-native-extensions
+- AIR SDK architecture packaging options: https://airsdk.dev/docs/building/air-developer-tool/commands/package
+
+**Recommended experiment:** use a current AIR SDK in an isolated Codespace to package a minimal test app with the same AIR namespace and each extracted ANE one at a time. This is a compatibility experiment only; do not replace the original APK until the actual SWF and ANE set can be packaged and the app's core editing paths pass. The exact Android API 36 target behavior of the chosen SDK still needs verification against that SDK's release notes and build output.
