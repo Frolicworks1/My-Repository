@@ -23,13 +23,16 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile static analysis tools
-        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tests/test_decode_axml.py
+      - name: Test binary manifest decoder
+        run: python -m unittest discover -s tests -v
       - name: Confirm no APK input is required for tooling checks
         run: |
           test -f tools/audit_apk.py
           test -f tools/decode_axml.py
           test -f tools/ane_compat_report.py
           test -f docs/ANDROID16_BLOCKER_ANALYSIS.md
+          test -f tests/test_decode_axml.py
           if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
             echo "Unexpected APK found in repository; proprietary input must stay out of Git."
             exit 1
