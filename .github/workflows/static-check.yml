@@ -1,0 +1,35 @@
+name: Static tooling checks
+
+on:
+  push:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+  pull_request:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  python-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile static analysis tools
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py
+      - name: Confirm no APK input is required for tooling checks
+        run: |
+          test -f tools/audit_apk.py
+          test -f tools/decode_axml.py
+          test -f docs/ANDROID16_BLOCKER_ANALYSIS.md
+          if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
+            echo "Unexpected APK found in repository; proprietary input must stay out of Git."
+            exit 1
+          fi
