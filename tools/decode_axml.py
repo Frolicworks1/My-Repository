@@ -43,7 +43,7 @@ def parse_axml(data: bytes) -> dict:
                     n = struct.unpack_from('<H', data, p)[0]; p += 2
                     if n & 0x8000:
                         n = ((n & 0x7fff) << 16) | struct.unpack_from('<H', data, p)[0]; p += 2
-                    s = data[p:p+n*2].decode('utf-16le', 'replace')
+                    s = data[p:p+n*2].decode('utf-16', 'replace').lstrip('\ufeff\ufffe')
                 strings.append(s)
         elif ctype == 0x0102:
             line = struct.unpack_from('<I', data, pos + 8)[0]
