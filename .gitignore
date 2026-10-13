@@ -1,0 +1,7 @@
+input/
+*.apk
+*.aab
+*.ipa
+build/
+__pycache__/
+*.pyc
