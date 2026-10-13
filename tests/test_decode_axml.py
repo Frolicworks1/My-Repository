@@ -31,7 +31,7 @@ def make_minimal_manifest():
     element_size = 16 + 20 + 20
     element = struct.pack("<HHI", 0x0102, 16, element_size)
     element += struct.pack("<II", 1, NO_INDEX)
-    element += struct.pack("<IHHHHHH", 0, 20, 20, 1, 0, 0, 0)
+    element += struct.pack("<IIHHHHHH", NO_INDEX, 0, 20, 20, 1, 0, 0, 0)
     # One attribute: ns=NO_INDEX, name=1, rawValue=2, typed string value=2.
     element += struct.pack("<IIIHBBI", NO_INDEX, 1, 2, 8, 0, 3, 2)
     total = 8 + len(pool) + len(element)
