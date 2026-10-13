@@ -7,6 +7,7 @@ This is static reverse engineering only. No rebuilt APK has been produced or tes
 - Android package ID: `air.com.adobe.pstouch`.
 - Android manifest reports `minSdkVersion=12` and `targetSdkVersion=12` (Android 3.1-era API level).
 - Application declares `hardwareAccelerated=false` and `largeHeap=true`.
+- Binary Android manifest independently decoded: package `air.com.adobe.pstouch`, `versionCode=1007007`, manifest `versionName=2.1`, launcher activity `.AppEntry`, `screenOrientation=landscape`, `hardwareAccelerated=false`, and `largeHeap=true`. The AIR descriptor separately reports version `1.7.7`; retain both identifiers when comparing builds because they are distinct metadata layers.
 - Manifest permissions include INTERNET, WRITE_EXTERNAL_STORAGE, CAMERA, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE and WAKE_LOCK.
 - AIR descriptor identifies Adobe AIR application namespace 16.0, application version 1.7.7, main content `TTPixel.swf`.
 - All 9 packaged native shared libraries are under `lib/armeabi-v7a/`; none are under `lib/arm64-v8a/`. ELF headers confirm 32-bit ARM.
