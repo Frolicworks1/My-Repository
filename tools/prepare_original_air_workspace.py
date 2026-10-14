@@ -84,8 +84,13 @@ def prepare(apk: Path, out: Path, app_id: str, target_sdk: int) -> dict:
         for source_name, relative in copy_map.items():
             if source_name not in names:
                 continue
+            # Treat APK member names as untrusted. A crafted ZIP path such as
+            # assets/resource/../../outside.txt must never write beyond --out.
+            destination = (out / relative).resolve()
+            output_root = out.resolve()
+            if destination != output_root and output_root not in destination.parents:
+                raise ValueError(f"Unsafe asset path in APK: {source_name!r}")
             data = zf.read(source_name)
-            destination = out / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
             inventory["included_assets"].append({
