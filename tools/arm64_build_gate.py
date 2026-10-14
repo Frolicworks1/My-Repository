@@ -64,6 +64,7 @@ def inspect(root: Path) -> dict:
                         # are packaged separately; don't match a JAR to a .so.
                         item["native_library_kind"] = "java-archive"
                         item["native_payload_note"] = "Review JAR contents and JNI dependencies separately; this descriptor alone cannot prove ARM64 runtime compatibility."
+                        blockers.append(f"{extension_id}: ARM64 platform declares Java JAR {native_name}; inspect its contents and JNI dependencies, then explicitly clear this manual-review gate.")
                     else:
                         item["native_payload_note"] = f"Unclassified nativeLibrary payload type ({suffix or 'no extension'}); manual inspection required."
                 else:
