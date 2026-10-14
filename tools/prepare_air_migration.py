@@ -39,9 +39,12 @@ def main() -> int:
         wanted = [
             n for n in names
             if n == "assets/TTPixel.swf"
-            or n.lower().endswith(".ane")
-            or (n.startswith("lib/") and n.endswith(".so"))
-            or n.endswith("/META-INF/ANE/extension.xml")
+            or n == "assets/META-INF/AIR/application.xml"
+            # Keep the complete packaged ANE payload: descriptors, SWC/library
+            # SWFs, Android platform payloads and nested native libraries.
+            or n.startswith("assets/META-INF/AIR/extensions/")
+            # Native libraries may be at APK root or nested inside an ANE.
+            or (n.endswith(".so") and (n.startswith("lib/") or "/extensions/" in n))
         ]
         for name in wanted:
             data = z.read(name)
@@ -49,9 +52,16 @@ def main() -> int:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_bytes(data)
             item = {"path": name, "size": len(data), "sha256": sha256(data)}
-            if name.startswith("lib/") and name.endswith(".so"):
+            if name.endswith(".so"):
                 parts = name.split("/")
-                abi = parts[1] if len(parts) > 2 else "unknown"
+                if name.startswith("lib/") and len(parts) > 2:
+                    abi = parts[1]
+                elif "Android-ARM64" in parts:
+                    abi = "ANE-Android-ARM64"
+                elif "Android-ARM" in parts:
+                    abi = "ANE-Android-ARM"
+                else:
+                    abi = "nested-or-unknown"
                 inventory["native_abi_counts"][abi] = inventory["native_abi_counts"].get(abi, 0) + 1
             inventory["extracted"].append(item)
     (args.out / "migration-input-inventory.json").write_text(
