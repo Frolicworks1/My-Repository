@@ -6,6 +6,8 @@ This is a clean-room proof-of-life module, deliberately separate from the origin
 
 - Android framework-native drawing canvas (no bundled 32-bit native libraries)
 - Finger drawing with round strokes
+- Five-color cycling brush palette
+- Import an image as a background/reference layer
 - Brush and white eraser
 - Undo last stroke and clear canvas
 - Export artwork to PNG using Android MediaStore
