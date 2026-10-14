@@ -10,7 +10,7 @@ Run this against a locally extracted SWF:
 python3 tools/audit_swf.py build/private-air-input/assets/TTPixel.swf --out build/swf-audit
 ```
 
-It emits `report.md` and `inventory.json`, supports FWS and CWS, and deliberately rejects ZWS until LZMA handling is implemented. It does not modify or decompile the SWF. The proprietary SWF and full APK must remain outside Git.
+It emits `report.md` and `inventory.json`, supports FWS and CWS, scans the ABC constant pool for ANE-related symbol names, and deliberately rejects ZWS until LZMA handling is implemented. It does not modify or decompile the SWF. The proprietary SWF and full APK must remain outside Git.
 
 ## What this changes for the original-app plan
 
