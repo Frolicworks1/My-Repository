@@ -40,3 +40,4 @@ Inspect `build/private-air-input/migration-input-inventory.json` and the extract
 The ARM64 preflight is intentionally fail-closed: it returns exit code 2 when any extracted ANE lacks an Android ARM64 descriptor or a matching ELF64/AArch64 native library. This is a diagnostic gate, not an APK build.
 
 - [Verified blockers from the uploaded APK](docs/ACTUAL_APK_BLOCKERS.md)
+- [Alternative clean-room ARM64 route and variant checks](docs/ALTERNATIVE_ARM64_ROUTE.md)
