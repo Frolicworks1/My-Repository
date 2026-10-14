@@ -63,6 +63,7 @@ public final class MainActivity extends Activity {
         drawingView = new DrawingView();
         addTool(toolbar, "Import", () -> importImage());
         addTool(toolbar, "Brush", () -> drawingView.setEraser(false));
+        addTool(toolbar, "Color", () -> drawingView.nextColor());
         addTool(toolbar, "Eraser", () -> drawingView.setEraser(true));
         addTool(toolbar, "Undo", () -> drawingView.undo());
         addTool(toolbar, "Clear", () -> drawingView.clear());
@@ -182,6 +183,8 @@ public final class MainActivity extends Activity {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         private Stroke current;
         private boolean eraser = false;
+        private int colorIndex = 0;
+        private final int[] palette = new int[] { INK, Color.BLACK, Color.rgb(190, 42, 52), Color.rgb(36, 93, 180), Color.rgb(20, 135, 94) };
         private Bitmap backgroundImage;
         private float brushSize;
 
@@ -197,6 +200,11 @@ public final class MainActivity extends Activity {
             strokes.clear();
             current = null;
             invalidate();
+        }
+
+        void nextColor() {
+            colorIndex = (colorIndex + 1) % palette.length;
+            status.setText("Brush color changed");
         }
 
         void setEraser(boolean enabled) {
@@ -257,7 +265,7 @@ public final class MainActivity extends Activity {
             float y = event.getY();
             switch (event.getActionMasked()) {
                 case MotionEvent.ACTION_DOWN:
-                    current = new Stroke(eraser ? Color.WHITE : INK, eraser ? brushSize * 4 : brushSize);
+                    current = new Stroke(eraser ? Color.WHITE : palette[colorIndex], eraser ? brushSize * 4 : brushSize);
                     current.path.moveTo(x, y);
                     strokes.add(current);
                     invalidate();
