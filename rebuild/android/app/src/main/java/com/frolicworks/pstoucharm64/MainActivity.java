@@ -14,7 +14,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Gravity;
-import android.net.Uri;
 import java.io.InputStream;
 import android.view.MotionEvent;
 import android.view.View;
