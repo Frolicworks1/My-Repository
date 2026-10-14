@@ -25,3 +25,10 @@ Changing target SDK, renaming ELF32 libraries, or copying ARM32 binaries into an
 - `tools/prepare_air_migration.py` now preserves the AIR application descriptor and the complete embedded `assets/META-INF/AIR/extensions/` tree, including platform payloads and nested native libraries. It writes a SHA-256 inventory and keeps proprietary inputs out of Git.
 - The extractor is preparation tooling only; it does not convert the original binaries or create an APK.
 - No rebuilt/installable APK has been produced yet. The blocking dependency remains an ARM64 implementation or source for the TTPixel native extension (and a verified decision for SyncEngine and the legacy media path). Do not report the app as fixed until a real package has been created, architecture-inspected, installed and tested.
+
+
+## Added automated preflight gate
+- Added `tools/arm64_build_gate.py`, which scans extracted ANE descriptors and checks whether declared Android ARM64 native libraries are actually ELF64/AArch64.
+- Exit code 2 means blocked; this is intentional so CI/scripts cannot mistake missing ARM64 payloads for a successful build.
+- Added fixture tests for an ARM32-only TTPixel-style ANE (blocked) and an ARM64 descriptor with an AArch64 library (passes the static gate).
+- This preflight cannot establish runtime compatibility, restore missing source code, or generate an APK. It is a guardrail against false-positive packaging.
