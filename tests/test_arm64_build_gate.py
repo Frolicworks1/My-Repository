@@ -43,6 +43,25 @@ class Arm64BuildGateTests(unittest.TestCase):
             self.assertTrue(any("no Android ARM64 platform entry" in x for x in report["blockers"]))
             self.assertIn("ELF32", (out / "preflight.md").read_text(encoding="utf-8"))
 
+    def test_arm64_java_jar_requires_manual_review(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "inputs"
+            descriptor = root / "extensions" / "example" / "META-INF" / "ANE" / "extension.xml"
+            descriptor.parent.mkdir(parents=True)
+            descriptor.write_text("""<extension xmlns="http://ns.adobe.com/air/extension/3.1">
+              <id>example.jar</id><versionNumber>1</versionNumber>
+              <platforms><platform name="Android-ARM64"><applicationDeployment>
+                <nativeLibrary>library.jar</nativeLibrary>
+              </applicationDeployment></platform></platforms>
+            </extension>""", encoding="utf-8")
+            out = Path(tmp) / "report"
+            result = subprocess.run([sys.executable, str(TOOL), str(root), "--out", str(out)],
+                                    capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            report = json.loads((out / "preflight.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["status"], "blocked")
+            self.assertTrue(any("manual-review gate" in x for x in report["blockers"]))
+
     def test_passes_only_when_arm64_descriptor_has_aarch64_library(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp) / "inputs"
