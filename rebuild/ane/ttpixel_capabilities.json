@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "extension_id": "com.adobe.ttpixel.extension",
+  "purpose": "Clean-room compatibility planning inventory; not a claim of implementation.",
+  "status_vocabulary": [
+    "blocked_by_runtime_trace",
+    "unimplemented",
+    "deferred_optional"
+  ],
+  "global_rules": {
+    "require_runtime_trace_for_signatures": true,
+    "require_behavioral_tests_before_implemented": true,
+    "allow_fake_success": false,
+    "keep_proprietary_inputs_out_of_git": true
+  },
+  "capabilities": [
+    {
+      "id": "lifecycle",
+      "group": "startup",
+      "priority": 0,
+      "status": "blocked_by_runtime_trace",
+      "symbols": [
+        "createExtensionContext",
+        "getExtensionContext",
+        "preflight",
+        "TTPreflightResult"
+      ],
+      "acceptance": [
+        "Repeated create/preflight has deterministic results",
+        "Required-method failures are visible and do not masquerade as ready"
+      ]
+    },
+    {
+      "id": "image_io",
+      "group": "image_file",
+      "priority": 1,
+      "status": "unimplemented",
+      "symbols": [
+        "bitmapDataFromFile",
+        "bitmapDataFromFileEx",
+        "bitmapDataToFile",
+        "bitmapDataToFileEx",
+        "bitmapFileCreateEmpty",
+        "bitmapFileCreateFromBitmapData",
+        "bitmapFileRead",
+        "bitmapFileWrite"
+      ],
+      "acceptance": [
+        "Lossless fixture round-trips preserve pixels and alpha",
+        "Malformed and unsupported files fail without crashing",
+        "Save/reopen works for documented formats"
+      ]
+    },
+    {
+      "id": "pixel_ops",
+      "group": "image_file",
+      "priority": 1,
+      "status": "blocked_by_runtime_trace",
+      "symbols": [
+        "bitmapDataCopy",
+        "bitmapDataResample",
+        "getPixelsBitmapEx",
+        "compressBitmapRLE",
+        "uncompressBitmapData",
+        "uncompressBitmapDataEx",
+        "bitmapFileResample"
+      ],
+      "acceptance": [
+        "Dimensions and bounds are checked",
+        "Pixel order, alpha and channel representation match fixtures",
+        "RLE/compression round-trip tests pass"
+      ]
+    },
+    {
+      "id": "filters",
+      "group": "processing",
+      "priority": 2,
+      "status": "unimplemented",
+      "symbols": [
+        "createFilter",
+        "createFilterEx",
+        "applyFilter",
+        "destroyFilter"
+      ],
+      "acceptance": [
+        "Known filter fixtures match documented tolerances",
+        "Invalid parameters fail clearly",
+        "Filter lifecycle does not leak native or managed resources"
+      ]
+    },
+    {
+      "id": "gpu_rendering",
+      "group": "rendering",
+      "priority": 3,
+      "status": "blocked_by_runtime_trace",
+      "symbols": [
+        "TTGL",
+        "TTGLCommandSequence",
+        "prepareTextureFromBitmapData",
+        "updateTextureFromBitmapData",
+        "setRenderTarget",
+        "renderPreviewFrame",
+        "asyncReadPixels",
+        "asyncExecuteSequence"
+      ],
+      "acceptance": [
+        "Texture/render-target lifecycle is balanced",
+        "Async completion cannot access released resources",
+        "Orientation, alpha and color space match fixtures"
+      ]
+    },
+    {
+      "id": "quick_selection",
+      "group": "selection",
+      "priority": 4,
+      "status": "unimplemented",
+      "symbols": [
+        "TTQuickSelection",
+        "quickselection"
+      ],
+      "acceptance": [
+        "Mask fixtures are stable and deterministic",
+        "Large images and invalid inputs fail safely"
+      ]
+    },
+    {
+      "id": "camera",
+      "group": "device",
+      "priority": 4,
+      "status": "deferred_optional",
+      "symbols": [
+        "TTCamera",
+        "TTCameraCapabilities",
+        "TTCameraParameters",
+        "TTCameraRoll",
+        "TTCameraUI",
+        "enumerateCameras"
+      ],
+      "acceptance": [
+        "Permission denied and no-camera cases are safe",
+        "Captured/imported media is handed off in supported formats"
+      ]
+    },
+    {
+      "id": "stylus_pressure",
+      "group": "input",
+      "priority": 4,
+      "status": "deferred_optional",
+      "symbols": [
+        "TTPressureProvider",
+        "TTPressureSource",
+        "createPressureSource",
+        "getPressure",
+        "getUnbiasedPressure",
+        "updatePressureSource"
+      ],
+      "acceptance": [
+        "No-stylus fallback is documented and neutral",
+        "Supported pressure values are bounded and repeatable"
+      ]
+    },
+    {
+      "id": "sync_engine",
+      "group": "cloud",
+      "priority": 5,
+      "status": "deferred_optional",
+      "symbols": [
+        "initialize",
+        "isAvailable",
+        "start",
+        "stop",
+        "terminate",
+        "setBandwidthLimit",
+        "getDeviceManufacturer",
+        "getDeviceModel",
+        "getReturnCodeText"
+      ],
+      "acceptance": [
+        "Cloud sync remains disabled until endpoint and auth behavior are verified",
+        "No cloud integration blocks offline editing unless traces prove dependency"
+      ]
+    },
+    {
+      "id": "push_notifications",
+      "group": "cloud",
+      "priority": 5,
+      "status": "deferred_optional",
+      "symbols": [
+        "C2DM register",
+        "C2DM unregister",
+        "availability",
+        "long polling"
+      ],
+      "acceptance": [
+        "Legacy C2DM remains explicitly unsupported unless a modern replacement is justified",
+        "No crash when push integration is absent"
+      ]
+    }
+  ]
+}
