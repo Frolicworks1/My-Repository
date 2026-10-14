@@ -82,5 +82,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -no-boot-anim
           script: cd rebuild/android && gradle --no-daemon connectedDebugAndroidTest
 
