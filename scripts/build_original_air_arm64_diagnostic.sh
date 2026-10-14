@@ -8,7 +8,7 @@ if [[ $# -lt 1 ]]; then
   echo "Usage: AIRSDK_HOME=/path/to/AIRSDK AIR_CERT_PASSWORD='...' $0 /path/to/PS\ Touch\ Plus.apk" >&2
   exit 2
 fi
-APK="$1"
+INPUT="$1"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 AIRSDK_HOME="${AIRSDK_HOME:-}"
 if [[ -z "$AIRSDK_HOME" || ! -f "$AIRSDK_HOME/lib/adt.jar" ]]; then
@@ -19,8 +19,31 @@ if [[ -z "${AIR_CERT_PASSWORD:-}" ]]; then
   echo "Set AIR_CERT_PASSWORD for a temporary test signing certificate." >&2
   exit 2
 fi
-OUT="${PS_TOUCH_AIR_OUT:-$ROOT/build/original-air-arm64-diagnostic}"
 mkdir -p "$ROOT/build"
+if [[ "$INPUT" == *.zip ]]; then
+  APK="$ROOT/build/private-input/PS-Touch-Plus.apk"
+  mkdir -p "$(dirname "$APK")"
+  python3 - "$INPUT" "$APK" <<'PY'
+import sys, zipfile
+from pathlib import Path
+source, target = Path(sys.argv[1]), Path(sys.argv[2])
+if not source.is_file():
+    raise SystemExit(f"Input ZIP not found: {source}")
+with zipfile.ZipFile(source) as z:
+    candidates = [n for n in z.namelist() if n.lower().endswith(".apk") and not n.endswith("/")]
+    if len(candidates) != 1:
+        raise SystemExit(f"Expected exactly one APK inside ZIP, found {len(candidates)}")
+    target.write_bytes(z.read(candidates[0]))
+print(f"Extracted {candidates[0]} to {target}")
+PY
+else
+  APK="$INPUT"
+fi
+if [[ ! -f "$APK" ]]; then
+  echo "Input APK/ZIP not found: $INPUT" >&2
+  exit 2
+fi
+OUT="${PS_TOUCH_AIR_OUT:-$ROOT/build/original-air-arm64-diagnostic}"
 if [[ -e "$OUT" ]]; then
   echo "Output already exists: $OUT (remove it or set PS_TOUCH_AIR_OUT)." >&2
   exit 2
