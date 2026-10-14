@@ -43,3 +43,5 @@ The ARM64 preflight is intentionally fail-closed: it returns exit code 2 when an
 - [Alternative clean-room ARM64 route and variant checks](docs/ALTERNATIVE_ARM64_ROUTE.md)
 
 For a one-command local/Codespaces diagnostic (not an APK build), run `bash scripts/codespaces_preflight.sh "PS Touch Plus.zip"` after uploading the ZIP to the workspace. Outputs stay under `build/`; the script returns code 2 when ARM64 blockers remain.
+
+To verify whether another PS Touch/PS CC APK variant is actually compatible before adapting patches, use `python tools/compare_apk_variants.py <left.apk> <right.apk> --out build/variant-compare`. This is static evidence only, not a compatibility guarantee.
