@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TOOL = ROOT / "tools" / "prepare_original_air_workspace.py"
 
 
-def fixture_apk(path):
+def fixture_apk(path, include_unsafe_path=False):
     descriptor = b"""<?xml version="1.0" encoding="utf-8"?>
 <application xmlns="http://ns.adobe.com/air/application/16.0">
   <id>com.adobe.pstouch</id><filename>PSTouch</filename>
@@ -36,6 +36,8 @@ def fixture_apk(path):
         z.writestr("assets/icons/test.png", b"icon")
         z.writestr("assets/META-INF/AIR/extensions/com.example/META-INF/ANE/extension.xml", b"<extension/>")
         z.writestr("lib/armeabi-v7a/libold.so", b"arm32")
+        if include_unsafe_path:
+            z.writestr("assets/resource/../../escaped.txt", b"must not escape output")
 
 
 class PrepareOriginalAirWorkspaceTests(unittest.TestCase):
@@ -61,6 +63,20 @@ class PrepareOriginalAirWorkspaceTests(unittest.TestCase):
             inventory = json.loads((out / "original-air-workspace.json").read_text())
             self.assertEqual(len(inventory["ane_ids_removed_from_descriptor"]), 1)
             self.assertEqual(inventory["omitted_native_libraries"][0]["path"], "lib/armeabi-v7a/libold.so")
+
+    def test_rejects_archive_paths_that_escape_output_directory(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            apk, out = base / "input.apk", base / "out"
+            escaped = base / "escaped.txt"
+            fixture_apk(apk, include_unsafe_path=True)
+            result = subprocess.run(
+                [sys.executable, str(TOOL), str(apk), "--out", str(out)],
+                capture_output=True, text=True, check=False,
+            )
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Unsafe asset path", result.stderr)
+            self.assertFalse(escaped.exists())
 
     def test_refuses_nonempty_output_directory(self):
         with tempfile.TemporaryDirectory() as tmp:
