@@ -35,6 +35,8 @@ class AneCompatibilityReportTests(unittest.TestCase):
               <id>example.test</id><versionNumber>1</versionNumber>
               <platforms><platform name="Android-ARM">
                 <applicationDeployment><nativeLibrary>libexample.so</nativeLibrary></applicationDeployment>
+              </platform><platform name="iPhone-ARM">
+                <applicationDeployment><nativeLibrary>libexample-ios.a</nativeLibrary></applicationDeployment>
               </platform></platforms>
             </extension>"""
             with zipfile.ZipFile(apk, "w") as zf:
@@ -53,6 +55,8 @@ class AneCompatibilityReportTests(unittest.TestCase):
             self.assertEqual(report["abis"], ["armeabi-v7a"])
             self.assertTrue(any(x["id"] == "no-arm64-native-libraries" for x in report["findings"]))
             self.assertTrue(any(x["id"] == "ane-missing-arm64" for x in report["findings"]))
+            self.assertTrue(any(x["id"] == "legacy-c2dm" for x in report["findings"]))
+            self.assertIn("iPhone-ARM", (out / "report.md").read_text(encoding="utf-8"))
             self.assertIn("example.test", (out / "report.md").read_text(encoding="utf-8"))
 
 
