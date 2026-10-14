@@ -85,7 +85,7 @@ jobs:
           emulator-boot-timeout: 600
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -no-boot-anim -memory 4096 -cores 2
           script: |
-            set -euo pipefail
+            set -eu
             echo "Waiting for Android emulator boot completion..."
             adb wait-for-device
             for attempt in $(seq 1 60); do
