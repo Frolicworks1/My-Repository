@@ -11,9 +11,9 @@ TOOL = ROOT / "tools" / "audit_swf.py"
 
 
 def tiny_swf(signature=b"FWS"):
-    # RECT with Nbits=1 occupies two bytes; then 24fps and one frame.
-    body = b"\x08\x00\x18\x01"
-    body += struct.pack("<H", 0)  # End tag
+    # RECT (two bytes), frame rate 24fps, one frame, and End tag.
+    body = b"\x08\x00\x00\x18\x01\x00"
+    body += struct.pack("<H", 0)
     header = b"FWS" + bytes([10]) + struct.pack("<I", 8 + len(body))
     if signature == b"FWS":
         return header + body
@@ -45,6 +45,7 @@ class AuditSwfTests(unittest.TestCase):
         result, files = self.run_tool(tiny_swf(), 0)
         self.assertIn("SWF v10", result.stdout)
         self.assertIn("End tag found: True", files["report.md"])
+        self.assertIn("Frame rate: 24.0", files["report.md"])
 
     def test_zlib_compressed_swf(self):
         result, files = self.run_tool(tiny_swf(b"CWS"), 0)
