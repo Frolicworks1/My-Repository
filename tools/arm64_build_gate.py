@@ -52,11 +52,20 @@ def inspect(root: Path) -> dict:
             item = {"name": name, "native_library": native_name}
             if name in ARM64_PLATFORM_NAMES:
                 if native_name:
-                    matches = [p for p in all_so if p.name == Path(native_name).name]
-                    if not matches:
-                        blockers.append(f"{extension_id}: ARM64 descriptor names {native_name}, but no matching .so exists in extracted inputs.")
-                    elif not any((lambda info: info.get("is_elf") and info.get("class") == "ELF64" and info.get("machine") == AARCH64_MACHINE)(elf_info(p)) for p in matches):
-                        blockers.append(f"{extension_id}: {native_name} exists but no matching ELF64/AArch64 library was found.")
+                    suffix = Path(native_name).suffix.lower()
+                    if suffix == ".so":
+                        matches = [p for p in all_so if p.name == Path(native_name).name]
+                        if not matches:
+                            blockers.append(f"{extension_id}: ARM64 descriptor names {native_name}, but no matching .so exists in extracted inputs.")
+                        elif not any((lambda info: info.get("is_elf") and info.get("class") == "ELF64" and info.get("machine") == AARCH64_MACHINE)(elf_info(p)) for p in matches):
+                            blockers.append(f"{extension_id}: {native_name} exists but no matching ELF64/AArch64 library was found.")
+                    elif suffix == ".jar":
+                        # AIR ANEs may declare a Java JAR while JNI .so files
+                        # are packaged separately; don't match a JAR to a .so.
+                        item["native_library_kind"] = "java-archive"
+                        item["native_payload_note"] = "Review JAR contents and JNI dependencies separately; this descriptor alone cannot prove ARM64 runtime compatibility."
+                    else:
+                        item["native_payload_note"] = f"Unclassified nativeLibrary payload type ({suffix or 'no extension'}); manual inspection required."
                 else:
                     blockers.append(f"{extension_id}: ARM64 platform entry has no nativeLibrary declaration; verify whether this is intentionally pure ActionScript.")
             platforms.append(item)
@@ -77,6 +86,7 @@ def inspect(root: Path) -> dict:
         "limitations": [
             "A passed preflight is not proof that the ANE loads or behaves correctly at runtime.",
             "This tool does not compile, patch, sign, or create an APK.",
+            "ANE descriptors may name Java JARs while JNI .so files are packaged separately; JAR contents and JNI bindings require separate review.",
             "AIR runtime/API compatibility and device testing remain separate gates."
         ],
     }
