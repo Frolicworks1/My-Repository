@@ -25,7 +25,7 @@ jobs:
       - name: Check Codespaces helper syntax
         run: bash -n scripts/codespaces_preflight.sh scripts/build_original_air_arm64_diagnostic.sh
       - name: Compile static analysis tools
-        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tools/compare_apk_variants.py tools/audit_swf.py tools/prepare_original_air_workspace.py tests/test_prepare_original_air_workspace.py tests/test_compare_apk_variants.py tests/test_audit_swf.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tools/compare_apk_variants.py tools/audit_swf.py tools/prepare_original_air_workspace.py tests/test_prepare_original_air_workspace.py tests/test_ttpixel_contract.py tests/test_compare_apk_variants.py tests/test_audit_swf.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
       - name: Test manifest decoder, ANE report, migration extractor, ARM64 gate, APK variant comparison and compiled SWF inventory and original AIR workspace preparation
         run: python -m unittest discover -s tests -v
       - name: Confirm private APK inputs are not committed
@@ -49,6 +49,9 @@ jobs:
           test -f tests/test_compare_apk_variants.py
           test -f tests/test_audit_swf.py
           test -f tests/test_prepare_original_air_workspace.py
+          test -f tests/test_ttpixel_contract.py
+          test -f docs/TTPixel_ARM64_REPLACEMENT_CONTRACT.md
+          test -f rebuild/ane/ttpixel_capabilities.json
           if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
             echo "Unexpected APK found in repository; proprietary input must stay out of Git."
             exit 1
