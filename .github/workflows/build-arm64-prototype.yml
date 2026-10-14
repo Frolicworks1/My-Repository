@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: arm64-prototype-${{ github.ref }}
+  group: arm64-prototype-v2-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -25,6 +25,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -66,6 +67,13 @@ jobs:
                   raise SystemExit("Unexpected native libraries; review architecture before distributing")
           PY
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package:|sdkVersion:|targetSdkVersion:"
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS-Touch-ARM64-Prototype-debug
+          path: rebuild/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
       - name: Android 16 emulator smoke test
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -75,10 +83,4 @@ jobs:
           profile: pixel_2
           disable-animations: true
           script: cd rebuild/android && gradle --no-daemon connectedDebugAndroidTest
-      - name: Upload debug APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS-Touch-ARM64-Prototype-debug
-          path: rebuild/android/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
+
