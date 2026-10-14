@@ -194,7 +194,6 @@ public final class MainActivity extends Activity {
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeCap(Paint.Cap.ROUND);
             paint.setStrokeJoin(Paint.Join.ROUND);
-            paint.setBlendMode(null);
             canvas.drawPath(stroke.path, paint);
         }
 
