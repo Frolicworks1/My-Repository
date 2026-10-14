@@ -25,7 +25,7 @@ jobs:
       - name: Check Codespaces helper syntax
         run: bash -n scripts/codespaces_preflight.sh
       - name: Compile static analysis tools
-        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tools/compare_apk_variants.py tests/test_compare_apk_variants.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
       - name: Test manifest decoder, ANE report, migration extractor and ARM64 build gate
         run: python -m unittest discover -s tests -v
       - name: Confirm private APK inputs are not committed
@@ -35,6 +35,7 @@ jobs:
           test -f tools/ane_compat_report.py
           test -f tools/prepare_air_migration.py
           test -f tools/arm64_build_gate.py
+          test -f tools/compare_apk_variants.py
           test -f scripts/codespaces_preflight.sh
           test -f docs/ANDROID16_BLOCKER_ANALYSIS.md
           test -f docs/INSTALL_FAILURE_TRIAGE.md
@@ -42,6 +43,7 @@ jobs:
           test -f tests/test_ane_compat_report.py
           test -f tests/test_prepare_air_migration.py
           test -f tests/test_arm64_build_gate.py
+          test -f tests/test_compare_apk_variants.py
           if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
             echo "Unexpected APK found in repository; proprietary input must stay out of Git."
             exit 1
