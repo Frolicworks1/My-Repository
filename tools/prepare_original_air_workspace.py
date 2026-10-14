@@ -65,6 +65,10 @@ def prepare(apk: Path, out: Path, app_id: str, target_sdk: int) -> dict:
             "assets/adobeair.vch": Path("adobeair.vch"),
         }
         for name in names:
+            # ZIP archives may include explicit directory entries. Do not try to
+            # write those entries as files; only copy actual asset payloads.
+            if name.endswith("/"):
+                continue
             if name.startswith("assets/resource/"):
                 copy_map[name] = Path(name.removeprefix("assets/"))
             elif name.startswith("assets/icons/"):
