@@ -21,12 +21,12 @@ This test can tell us whether the original SWF and assets can be loaded by the c
 Install the HARMAN AIR SDK using its official manager and personally accept its license terms first:
 https://airsdk.dev/docs/basics/getting-started
 
-Upload/extract your original APK in the Codespace, then run:
+Upload the original ZIP in the Codespace (the script extracts its single APK safely), then run:
 
 ```bash
 export AIRSDK_HOME="$HOME/AIRSDK"
 export AIR_CERT_PASSWORD='choose-a-temporary-test-password'
-bash scripts/build_original_air_arm64_diagnostic.sh "/path/to/PS Touch Plus.apk"
+bash scripts/build_original_air_arm64_diagnostic.sh "/path/to/PS Touch Plus.zip"
 ```
 
 The build script stops if the SDK or password is missing. It does not download or silently accept the SDK license. The diagnostic APK and temporary signing certificate stay under ignored local `build/` output and are not committed to Git.
