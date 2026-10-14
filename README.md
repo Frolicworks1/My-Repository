@@ -17,7 +17,7 @@ Upload the APK privately into the workspace (for example input/PS Touch Plus.apk
 
     python3 tools/audit_apk.py "input/PS Touch Plus.apk" --out build/audit
 
-The script writes Markdown and JSON inventories. Android Build Tools are optional for extra decoded-manifest output. See docs/REVERSE_ENGINEERING_NOTES.md for the migration plan and blockers.
+The script writes Markdown and JSON inventories. Android Build Tools are optional for extra decoded-manifest output. See [the Codespaces runbook](docs/CODESPACES_MIGRATION_RUNBOOK.md) for the private input workflow, and docs/REVERSE_ENGINEERING_NOTES.md for the migration plan and blockers.
 
 ## Next migration experiment (private workspace only)
 
@@ -27,6 +27,7 @@ The helper below extracts the original SWF, embedded ANE packages/descriptors, a
 mkdir -p input
 # Copy your own PS Touch Plus.apk into input/ in Codespaces.
 python3 tools/audit_apk.py "input/PS Touch Plus.apk" --out build/audit
+python3 tools/ane_compat_report.py "input/PS Touch Plus.apk" --out build/compatibility
 python3 tools/prepare_air_migration.py "input/PS Touch Plus.apk" --out build/private-air-input
 ```
 
