@@ -21,4 +21,7 @@ Create a separately signed PS Touch Plus APK that can be installed and tested on
 Changing target SDK, renaming ELF32 libraries, or copying ARM32 binaries into an arm64 directory cannot translate machine code. Modern AIR packaging tools can package compatible ANEs, but the ANE must actually support the target architecture. The closed-source native implementations cannot be regenerated from the APK alone.
 
 ## Current status
-Reverse-engineering and static tests exist; no rebuilt/installable APK has been produced yet. Do not report the app as fixed until a real package has been created, architecture-inspected, installed and tested.
+- Static CI passed for the AArch64 ELF/ANE compatibility test and AIR migration input extractor test (workflow run [38508619692](https://github.com/Frolicworks1/My-Repository/actions/runs/38508619692)).
+- `tools/prepare_air_migration.py` now preserves the AIR application descriptor and the complete embedded `assets/META-INF/AIR/extensions/` tree, including platform payloads and nested native libraries. It writes a SHA-256 inventory and keeps proprietary inputs out of Git.
+- The extractor is preparation tooling only; it does not convert the original binaries or create an APK.
+- No rebuilt/installable APK has been produced yet. The blocking dependency remains an ARM64 implementation or source for the TTPixel native extension (and a verified decision for SyncEngine and the legacy media path). Do not report the app as fixed until a real package has been created, architecture-inspected, installed and tested.
