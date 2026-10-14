@@ -68,29 +68,45 @@ fi
 if command -v aapt >/dev/null 2>&1; then
   aapt dump badging "$APK_OUT" > "$OUT/aapt-badging.txt"
 fi
-python3 - "$APK_OUT" <<'PY'
-import struct, sys, zipfile
+python3 - "$APK_OUT" "$OUT/TTPixel.swf" <<'PY'
+import hashlib, struct, sys, zipfile
 from pathlib import Path
-apk = Path(sys.argv[1])
+apk, original_swf = Path(sys.argv[1]), Path(sys.argv[2])
 with zipfile.ZipFile(apk) as z:
-    libs = [n for n in z.namelist() if n.startswith("lib/") and n.endswith(".so")]
+    names = set(z.namelist())
+    libs = [n for n in names if n.startswith("lib/") and n.endswith(".so")]
     arm64 = [n for n in libs if n.startswith("lib/arm64-v8a/")]
+    non_arm64 = [n for n in libs if not n.startswith("lib/arm64-v8a/")]
     bad = []
     for name in arm64:
         data = z.read(name)
-        if len(data) < 20 or data[:4] != b"\x7fELF":
+        if len(data) < 20 or data[:4] != b"\\x7fELF":
             bad.append((name, "not ELF"))
             continue
         elf_class = data[4]
         machine = struct.unpack_from("<H", data, 18)[0]
         if elf_class != 2 or machine != 183:
             bad.append((name, f"ELF class={elf_class}, machine={machine}"))
+    required = {"AndroidManifest.xml", "TTPixel.swf", "CABConfig.xml"}
+    missing = sorted(required - names)
+    if missing:
+        raise SystemExit(f"APK missing required entries: {missing}")
+    packaged_swf = z.read("TTPixel.swf")
+    source_swf = original_swf.read_bytes()
+    if hashlib.sha256(packaged_swf).digest() != hashlib.sha256(source_swf).digest():
+        raise SystemExit("The packaged TTPixel.swf differs from the prepared original SWF.")
     print(f"APK: {apk} ({apk.stat().st_size:,} bytes)")
-    print(f"Native libraries: {len(libs)}; ARM64 libraries: {len(arm64)}")
-    if not arm64 or bad:
-        print("ARM64 verification failed:", bad)
+    print(f"Native libraries: {len(libs)}; ARM64 libraries: {len(arm64)}; non-ARM64 libraries: {len(non_arm64)}")
+    print(f"Original SWF SHA-256 preserved: {hashlib.sha256(packaged_swf).hexdigest()}")
+    if not arm64 or non_arm64 or bad:
+        print("ARM64 verification failed:", {"non_arm64": non_arm64, "bad_elf": bad})
         raise SystemExit(1)
 print("Structural ARM64 package check passed; runtime feature compatibility is NOT proven.")
 PY
+if command -v apksigner >/dev/null 2>&1; then
+  apksigner verify --verbose "$APK_OUT"
+else
+  echo "WARNING: apksigner not found on PATH; signing verification skipped (ADT signing was requested)." >&2
+fi
 echo "Diagnostic APK: $APK_OUT"
 echo "This APK intentionally omits original ANEs; test startup only and expect editing features may fail."
