@@ -33,9 +33,10 @@ APK="build/private-input/PS Touch Plus.apk"
 python tools/audit_apk.py "$APK" --out build/private-audit
 python tools/ane_compat_report.py "$APK" --out build/private-compat
 python tools/prepare_air_migration.py "$APK" --out build/private-air-input
+python tools/arm64_build_gate.py build/private-air-input --out build/arm64-preflight
 ```
 
-Outputs remain under `build/` (which should stay untracked). The reports include the source SHA-256, packaged ABIs, ANE descriptors and extracted AIR payloads. Review the results before any rebuild attempt.
+Outputs remain under `build/` (which should stay untracked). The reports include the source SHA-256, packaged ABIs, ANE descriptors and extracted AIR payloads. The final command deliberately exits with code 2 while an ANE is missing a real ARM64 descriptor/library. Review the results before any rebuild attempt.
 
 ## 3. Do not fake ARM64 support
 
