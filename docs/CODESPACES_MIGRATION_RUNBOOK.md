@@ -38,6 +38,18 @@ python tools/arm64_build_gate.py build/private-air-input --out build/arm64-prefl
 
 Outputs remain under `build/` (which should stay untracked). The reports include the source SHA-256, packaged ABIs, ANE descriptors and extracted AIR payloads. The final command deliberately exits with code 2 while an ANE is missing a real ARM64 descriptor/library. Review the results before any rebuild attempt.
 
+### Shortcut: run all diagnostics in one command
+
+After uploading the ZIP or APK to the Codespaces workspace, run:
+
+```bash
+bash scripts/codespaces_preflight.sh "PS Touch Plus.zip"
+# or, if the APK was uploaded directly:
+bash scripts/codespaces_preflight.sh "PS Touch Plus.apk"
+```
+
+The helper writes all reports under `build/` and returns exit code 2 if the ARM64 gate is blocked. That exit code is an expected diagnostic result for the current ARM32-only input, not a build failure to hide.
+
 ## 3. Do not fake ARM64 support
 
 - Do not copy ARM32 `.so` files into an `arm64-v8a` directory or rename them.
