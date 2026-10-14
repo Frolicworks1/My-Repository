@@ -26,6 +26,9 @@ def fixture_apk(path):
   </manifest>]]></manifestAdditions></android>
 </application>"""
     with zipfile.ZipFile(path, "w") as z:
+        # Explicit directory entries are legal in ZIPs and must not break extraction.
+        z.writestr("assets/resource/application/", b"")
+        z.writestr("assets/icons/", b"")
         z.writestr("assets/META-INF/AIR/application.xml", descriptor)
         z.writestr("assets/TTPixel.swf", b"SWF-FIXTURE")
         z.writestr("assets/CABConfig.xml", b"<configurations/>")
