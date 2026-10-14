@@ -118,6 +118,10 @@ def parse_tags(data: bytes) -> dict:
         "com.adobe.ttpixel.extension", "TTGL", "TTQuickSelection",
         "TTPixelExtension", "ExtensionContext", "TTPressure", "SyncEngine",
         "TTCamera", "TTImageProcessor", "TTAM", "TTSS", "TTCAF", "TTNEUtils",
+        "bitmapData", "bitmapFile", "createFilter", "applyFilter", "renderPreviewFrame",
+        "prepareTexture", "updateTexture", "compressBitmap", "uncompressBitmap",
+        "createPressureSource", "getPressure", "enumerateCameras", "TTImpExp",
+        "TTBigDataExtension", "TTWebServer", "asyncExecuteSequence", "asyncReadPixels",
     )
     exported_symbols = []
     symbol_classes = []
