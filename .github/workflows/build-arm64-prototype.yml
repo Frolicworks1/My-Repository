@@ -66,6 +66,15 @@ jobs:
                   raise SystemExit("Unexpected native libraries; review architecture before distributing")
           PY
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package:|sdkVersion:|targetSdkVersion:"
+      - name: Android 16 emulator smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          script: cd rebuild/android && gradle --no-daemon connectedDebugAndroidTest
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
