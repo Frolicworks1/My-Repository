@@ -18,3 +18,19 @@ Upload the APK privately into the workspace (for example input/PS Touch Plus.apk
     python3 tools/audit_apk.py "input/PS Touch Plus.apk" --out build/audit
 
 The script writes Markdown and JSON inventories. Android Build Tools are optional for extra decoded-manifest output. See docs/REVERSE_ENGINEERING_NOTES.md for the migration plan and blockers.
+
+## Next migration experiment (private workspace only)
+
+The helper below extracts the original SWF, embedded ANE packages/descriptors, and native libraries into a local working folder so they can be tested against a current AIR SDK without committing proprietary payloads:
+
+```sh
+mkdir -p input
+# Copy your own PS Touch Plus.apk into input/ in Codespaces.
+python3 tools/audit_apk.py "input/PS Touch Plus.apk" --out build/audit
+python3 tools/prepare_air_migration.py "input/PS Touch Plus.apk" --out build/private-air-input
+```
+
+Inspect `build/private-air-input/migration-input-inventory.json` and the extracted ANE `extension.xml` descriptors. Keep `input/` and `build/private-air-input/` out of Git. The extraction is not a build and cannot produce an installable ARM64 app by itself.
+
+**Hard gate before packaging:** the current app includes a core TTPixel ANE with no Android ARM64 payload in the original package. Do not attempt to call an ARM32 library an ARM64 library. A package experiment can only move forward once a compatible AIR SDK is available and each required ANE has a real ARM64 implementation or is replaced by a tested code-level alternative. A no-ANE prototype may help test the AIR runtime/SWF startup, but is not expected to retain the editor's core functionality.
+
