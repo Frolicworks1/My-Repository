@@ -114,7 +114,7 @@ with zipfile.ZipFile(apk) as z:
     bad = []
     for name in arm64:
         data = z.read(name)
-        if len(data) < 20 or data[:4] != b"\\x7fELF":
+        if len(data) < 20 or data[:4] != b"\x7fELF":
             bad.append((name, "not ELF"))
             continue
         elf_class = data[4]
