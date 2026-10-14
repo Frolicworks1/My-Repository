@@ -40,7 +40,7 @@ class AneCompatibilityReportTests(unittest.TestCase):
             with zipfile.ZipFile(apk, "w") as zf:
                 zf.writestr("AndroidManifest.xml", make_minimal_manifest())
                 zf.writestr("lib/armeabi-v7a/libexample.so", fake_arm_elf())
-                zf.writestr("META-INF/ANE/extension.xml", extension)
+                zf.writestr("example.ane/META-INF/ANE/extension.xml", extension)
                 zf.writestr("classes.dex", b"com.google.android.c2dm")
 
             result = subprocess.run(
