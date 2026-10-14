@@ -23,8 +23,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Compile static analysis tools
-        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tests/test_decode_axml.py tests/test_ane_compat_report.py
-      - name: Test binary manifest decoder and ANE report
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py
+      - name: Test manifest decoder, ANE report and AIR migration extractor
         run: python -m unittest discover -s tests -v
       - name: Confirm private APK inputs are not committed
         run: |
@@ -36,6 +36,7 @@ jobs:
           test -f docs/INSTALL_FAILURE_TRIAGE.md
           test -f tests/test_decode_axml.py
           test -f tests/test_ane_compat_report.py
+          test -f tests/test_prepare_air_migration.py
           if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
             echo "Unexpected APK found in repository; proprietary input must stay out of Git."
             exit 1
