@@ -29,9 +29,12 @@ mkdir -p input
 python3 tools/audit_apk.py "input/PS Touch Plus.apk" --out build/audit
 python3 tools/ane_compat_report.py "input/PS Touch Plus.apk" --out build/compatibility
 python3 tools/prepare_air_migration.py "input/PS Touch Plus.apk" --out build/private-air-input
+python3 tools/arm64_build_gate.py build/private-air-input --out build/arm64-preflight
 ```
 
 Inspect `build/private-air-input/migration-input-inventory.json` and the extracted ANE `extension.xml` descriptors. Keep `input/` and `build/private-air-input/` out of Git. The extraction is not a build and cannot produce an installable ARM64 app by itself.
 
 **Hard gate before packaging:** the current app includes a core TTPixel ANE with no Android ARM64 payload in the original package. Do not attempt to call an ARM32 library an ARM64 library. A package experiment can only move forward once a compatible AIR SDK is available and each required ANE has a real ARM64 implementation or is replaced by a tested code-level alternative. A no-ANE prototype may help test the AIR runtime/SWF startup, but is not expected to retain the editor's core functionality.
 
+
+The ARM64 preflight is intentionally fail-closed: it returns exit code 2 when any extracted ANE lacks an Android ARM64 descriptor or a matching ELF64/AArch64 native library. This is a diagnostic gate, not an APK build.
