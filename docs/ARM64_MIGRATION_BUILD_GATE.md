@@ -30,5 +30,5 @@ Changing target SDK, renaming ELF32 libraries, or copying ARM32 binaries into an
 ## Added automated preflight gate
 - Added `tools/arm64_build_gate.py`, which scans extracted ANE descriptors and checks whether declared Android ARM64 native libraries are actually ELF64/AArch64.
 - Exit code 2 means blocked; this is intentional so CI/scripts cannot mistake missing ARM64 payloads for a successful build.
-- Added fixture tests for an ARM32-only TTPixel-style ANE (blocked) and an ARM64 descriptor with an AArch64 library (passes the static gate).
+- Added fixture tests for an ARM32-only TTPixel-style ANE (blocked) and an ARM64 descriptor with an AArch64 library (passes the static gate); CI run [38508780529](https://github.com/Frolicworks1/My-Repository/actions/runs/38508780529) passed.
 - This preflight cannot establish runtime compatibility, restore missing source code, or generate an APK. It is a guardrail against false-positive packaging.
