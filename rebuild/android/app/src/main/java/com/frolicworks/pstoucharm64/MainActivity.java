@@ -2,7 +2,9 @@ package com.frolicworks.pstoucharm64;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -12,6 +14,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.Gravity;
+import android.net.Uri;
+import java.io.InputStream;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -57,6 +61,7 @@ public final class MainActivity extends Activity {
         root.addView(toolbar, new LinearLayout.LayoutParams(-1, dp(52)));
 
         drawingView = new DrawingView();
+        addTool(toolbar, "Import", () -> importImage());
         addTool(toolbar, "Brush", () -> drawingView.setEraser(false));
         addTool(toolbar, "Eraser", () -> drawingView.setEraser(true));
         addTool(toolbar, "Undo", () -> drawingView.undo());
@@ -94,6 +99,35 @@ public final class MainActivity extends Activity {
 
     private int dp(float value) {
         return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    private static final int REQUEST_IMPORT_IMAGE = 7104;
+
+    private void importImage() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("image/*");
+        try {
+            startActivityForResult(intent, REQUEST_IMPORT_IMAGE);
+        } catch (Exception error) {
+            toast("Image picker unavailable: " + error.getMessage());
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode != REQUEST_IMPORT_IMAGE || resultCode != RESULT_OK || data == null || data.getData() == null) return;
+        Uri uri = data.getData();
+        try (InputStream stream = getContentResolver().openInputStream(uri)) {
+            if (stream == null) throw new IllegalStateException("Could not open selected image");
+            Bitmap bitmap = BitmapFactory.decodeStream(stream);
+            if (bitmap == null) throw new IllegalArgumentException("Unsupported or unreadable image");
+            drawingView.setImage(bitmap);
+            status.setText("Image imported • draw over it or export PNG");
+        } catch (Exception error) {
+            toast("Import failed: " + error.getMessage());
+        }
     }
 
     private void saveArtwork() {
@@ -148,12 +182,21 @@ public final class MainActivity extends Activity {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         private Stroke current;
         private boolean eraser = false;
+        private Bitmap backgroundImage;
         private float brushSize;
 
         DrawingView() {
             super(MainActivity.this);
             brushSize = dp(5);
             setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
+
+        void setImage(Bitmap bitmap) {
+            if (backgroundImage != null && !backgroundImage.isRecycled()) backgroundImage.recycle();
+            backgroundImage = bitmap;
+            strokes.clear();
+            current = null;
+            invalidate();
         }
 
         void setEraser(boolean enabled) {
@@ -184,6 +227,17 @@ public final class MainActivity extends Activity {
         }
 
         void drawArtwork(Canvas canvas) {
+            if (backgroundImage != null) {
+                float scale = Math.min((float) getWidth() / backgroundImage.getWidth(),
+                                       (float) getHeight() / backgroundImage.getHeight());
+                float width = backgroundImage.getWidth() * scale;
+                float height = backgroundImage.getHeight() * scale;
+                float left = (getWidth() - width) / 2f;
+                float top = (getHeight() - height) / 2f;
+                Paint imagePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
+                canvas.drawBitmap(backgroundImage, null,
+                        new android.graphics.RectF(left, top, left + width, top + height), imagePaint);
+            }
             for (Stroke stroke : strokes) drawStroke(canvas, stroke);
             if (current != null) drawStroke(canvas, current);
         }
