@@ -22,6 +22,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Check Codespaces helper syntax
+        run: bash -n scripts/codespaces_preflight.sh
       - name: Compile static analysis tools
         run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
       - name: Test manifest decoder, ANE report, migration extractor and ARM64 build gate
@@ -33,6 +35,7 @@ jobs:
           test -f tools/ane_compat_report.py
           test -f tools/prepare_air_migration.py
           test -f tools/arm64_build_gate.py
+          test -f scripts/codespaces_preflight.sh
           test -f docs/ANDROID16_BLOCKER_ANALYSIS.md
           test -f docs/INSTALL_FAILURE_TRIAGE.md
           test -f tests/test_decode_axml.py
