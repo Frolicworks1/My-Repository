@@ -41,3 +41,9 @@ For an Android 16 device that cannot run 32-bit apps, Route B is the technically
 - Any unsupported legacy project features are explicitly reported; no claim of full compatibility based solely on launching a demo.
 
 **Status:** The investigation and automated static tooling are progressing, but there is no installable ARM64 build of the uploaded app yet. This route requires native implementation work and cannot honestly be completed by manifest edits alone.
+
+
+## Native prototype work started (2026-10-14)
+A separate module now exists at `rebuild/android/`. It is a Java/Dex Android app targeting API 36, with no copied proprietary libraries. Current first-milestone features are touch drawing, brush/eraser, cycling brush colors, undo/clear, image import as a reference/background, and PNG export through MediaStore. The new workflow `.github/workflows/build-arm64-prototype.yml` builds and uploads a debug APK artifact when the build and structural checks pass.
+
+This prototype is architecture-neutral managed code and runs on ARM64 Android; it is **not** a native AArch64 binary and is **not** the original Photoshop Touch application. Its first build must pass CI and the APK must be installed and tested on the actual target device before claiming runtime success. Legacy project import, layers, selections, filters, text, pressure support and original PS Touch feature parity remain unimplemented.
