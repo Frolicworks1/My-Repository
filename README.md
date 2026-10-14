@@ -41,3 +41,5 @@ The ARM64 preflight is intentionally fail-closed: it returns exit code 2 when an
 
 - [Verified blockers from the uploaded APK](docs/ACTUAL_APK_BLOCKERS.md)
 - [Alternative clean-room ARM64 route and variant checks](docs/ALTERNATIVE_ARM64_ROUTE.md)
+
+For a one-command local/Codespaces diagnostic (not an APK build), run `bash scripts/codespaces_preflight.sh "PS Touch Plus.zip"` after uploading the ZIP to the workspace. Outputs stay under `build/`; the script returns code 2 when ARM64 blockers remain.
