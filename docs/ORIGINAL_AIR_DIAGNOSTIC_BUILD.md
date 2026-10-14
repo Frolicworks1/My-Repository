@@ -21,6 +21,8 @@ This test can tell us whether the original SWF and assets can be loaded by the c
 Install the HARMAN AIR SDK using its official manager and personally accept its license terms first:
 https://airsdk.dev/docs/basics/getting-started
 
+**Important licensing constraint:** HARMAN's current Linux installation documentation states that Linux AIR SDK support requires a commercial license. GitHub Codespaces runs Linux, so do not assume this command will work under a free-tier SDK entitlement. Use a licensed Linux SDK, or build on a supported Windows/macOS environment where your license permits it. The script does not download the SDK, bypass licensing, or accept terms on your behalf.
+
 Upload the original ZIP in the Codespace (the script extracts its single APK safely), then run:
 
 ```bash
