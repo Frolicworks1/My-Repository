@@ -15,6 +15,10 @@ on:
       - '.github/workflows/build-arm64-prototype.yml'
   workflow_dispatch:
 
+concurrency:
+  group: arm64-prototype-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
