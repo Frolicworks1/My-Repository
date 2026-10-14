@@ -13,6 +13,7 @@ This is a clean-room proof-of-life module, deliberately separate from the origin
 - Export artwork to PNG using Android MediaStore
 - API 36 compile/target settings, Java 17, minSdk 23
 - Debug APK signed with the standard Android debug key by the Gradle build
+- Automated Android 16 emulator smoke test checks that the activity launches and the import, eraser and PNG export controls appear
 
 The app is architecture-neutral Java/Dex, so Android's runtime executes it on ARM64 devices; it is not an ARM64-only native binary. The CI gate rejects unexpected bundled `.so` libraries in this prototype.
 
