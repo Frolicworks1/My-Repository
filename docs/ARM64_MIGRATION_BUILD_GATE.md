@@ -32,3 +32,11 @@ Changing target SDK, renaming ELF32 libraries, or copying ARM32 binaries into an
 - Exit code 2 means blocked; this is intentional so CI/scripts cannot mistake missing ARM64 payloads for a successful build.
 - Added fixture tests for an ARM32-only TTPixel-style ANE (blocked) and an ARM64 descriptor with an AArch64 library (passes the static gate); CI run [38508780529](https://github.com/Frolicworks1/My-Repository/actions/runs/38508780529) passed.
 - This preflight cannot establish runtime compatibility, restore missing source code, or generate an APK. It is a guardrail against false-positive packaging.
+
+
+## Latest continuation work (2026-10-14)
+- Added a one-command local/Codespaces diagnostic: `bash scripts/codespaces_preflight.sh "PS Touch Plus.zip"`. It keeps the source APK and extracted payloads under ignored local build output and returns exit code 2 when ARM64 blockers remain.
+- Added `tools/compare_apk_variants.py` so a second APK can be compared by package/AIR IDs, ABIs, SWF SHA-256 hashes and ANE platform declarations before any patches are reused. This is especially important because the public PS CC Mod research project may describe a related but not identical phone variant.
+- Added `docs/ACTUAL_APK_BLOCKERS.md` with the verified native library inventory and the three ARM-only ANE descriptors.
+- Added `docs/ALTERNATIVE_ARM64_ROUTE.md` explaining why a clean-room native rebuild is the credible route for a 64-bit-only Android device, and why it must not be presented as a completed port.
+- Latest full static CI pass before the most recent documentation-only commit: [38560043118](https://github.com/Frolicworks1/My-Repository/actions/runs/38560043118). It includes the comparison tool and tests.
