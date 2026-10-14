@@ -11,9 +11,9 @@ TOOL = ROOT / "tools" / "audit_swf.py"
 
 
 def tiny_swf(signature=b"FWS"):
-    # RECT with Nbits=1 occupies one byte; then 24fps and one frame.
+    # RECT with Nbits=1 occupies two bytes; then 24fps and one frame.
     body = b"\x08\x00\x18\x01"
-    body += struct.pack("<H", (1 << 6) | 0)  # End tag
+    body += struct.pack("<H", 0)  # End tag
     header = b"FWS" + bytes([10]) + struct.pack("<I", 8 + len(body))
     if signature == b"FWS":
         return header + body
@@ -34,17 +34,21 @@ class AuditSwfTests(unittest.TestCase):
                 capture_output=True, text=True, check=False,
             )
             self.assertEqual(result.returncode, expect_code, result.stderr)
-            return result, out
+            files = {}
+            if out.exists():
+                for item in out.iterdir():
+                    if item.is_file():
+                        files[item.name] = item.read_text(encoding="utf-8")
+            return result, files
 
     def test_uncompressed_swf(self):
-        result, out = self.run_tool(tiny_swf(), 0)
+        result, files = self.run_tool(tiny_swf(), 0)
         self.assertIn("SWF v10", result.stdout)
-        report = (out / "report.md").read_text(encoding="utf-8")
-        self.assertIn("End tag found: True", report)
+        self.assertIn("End tag found: True", files["report.md"])
 
     def test_zlib_compressed_swf(self):
-        result, out = self.run_tool(tiny_swf(b"CWS"), 0)
-        self.assertIn("Compression: CWS", (out / "report.md").read_text())
+        result, files = self.run_tool(tiny_swf(b"CWS"), 0)
+        self.assertIn("Compression: CWS", files["report.md"])
 
     def test_lzma_is_rejected_explicitly(self):
         result, _ = self.run_tool(tiny_swf(b"ZWS"), 2)
