@@ -1,0 +1,70 @@
+name: Build native ARM64 editor prototype
+
+on:
+  push:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+    paths:
+      - 'rebuild/android/**'
+      - '.github/workflows/build-arm64-prototype.yml'
+  pull_request:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+    paths:
+      - 'rebuild/android/**'
+      - '.github/workflows/build-arm64-prototype.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android API 36 and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build debug APK
+        working-directory: rebuild/android
+        run: gradle --no-daemon clean assembleDebug
+      - name: Verify APK exists and is ARM64-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="rebuild/android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          python3 - "$APK" <<'PY'
+          import sys, zipfile
+          apk = sys.argv[1]
+          with zipfile.ZipFile(apk) as z:
+              names = z.namelist()
+              libs = [n for n in names if n.startswith("lib/") and n.endswith(".so")]
+              abis = sorted({n.split("/")[1] for n in libs})
+              print("APK:", apk)
+              print("Native libraries:", libs)
+              print("ABIs:", abis)
+              if abis and abis != ["arm64-v8a"]:
+                  raise SystemExit("Unexpected native ABI in ARM64 prototype")
+              if abis:
+                  raise SystemExit("Prototype should not bundle native .so libraries; Android framework code is ARM64 at runtime")
+          PY
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS-Touch-ARM64-Prototype-debug
+          path: rebuild/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
