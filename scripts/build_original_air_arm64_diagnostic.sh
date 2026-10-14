@@ -15,6 +15,20 @@ if [[ -z "$AIRSDK_HOME" || ! -f "$AIRSDK_HOME/lib/adt.jar" ]]; then
   echo "Set AIRSDK_HOME to a locally installed HARMAN AIR SDK (license accepted by you)." >&2
   exit 2
 fi
+for tool in java python3; do
+  if ! command -v "$tool" >/dev/null 2>&1; then
+    echo "Required tool not found on PATH: $tool" >&2
+    exit 2
+  fi
+done
+if ! java -version >/dev/null 2>&1; then
+  echo "Java is installed but cannot run; check JAVA_HOME and the runtime." >&2
+  exit 2
+fi
+if [[ ! -f "$INPUT" ]]; then
+  echo "Input APK/ZIP not found: $INPUT" >&2
+  exit 2
+fi
 if [[ -z "${AIR_CERT_PASSWORD:-}" ]]; then
   echo "Set AIR_CERT_PASSWORD for a temporary test signing certificate." >&2
   exit 2
@@ -43,6 +57,26 @@ if [[ ! -f "$APK" ]]; then
   echo "Input APK/ZIP not found: $INPUT" >&2
   exit 2
 fi
+# Fail before preparing the workspace if the APK is corrupt or lacks the
+# original AIR descriptor/SWF. This avoids leaving a misleading partial build.
+python3 - "$APK" <<'PY'
+import sys, zipfile
+from pathlib import Path
+apk = Path(sys.argv[1])
+try:
+    with zipfile.ZipFile(apk) as z:
+        corrupt = z.testzip()
+        if corrupt:
+            raise SystemExit(f"Input APK has a corrupt ZIP member: {corrupt}")
+        names = set(z.namelist())
+        required = {"assets/META-INF/AIR/application.xml", "assets/TTPixel.swf"}
+        missing = sorted(required - names)
+        if missing:
+            raise SystemExit(f"Input APK is missing required original AIR files: {missing}")
+except zipfile.BadZipFile as exc:
+    raise SystemExit(f"Input is not a valid APK/ZIP archive: {exc}")
+print(f"Input archive preflight passed: {apk} ({apk.stat().st_size:,} bytes)")
+PY
 OUT="${PS_TOUCH_AIR_OUT:-$ROOT/build/original-air-arm64-diagnostic}"
 if [[ -e "$OUT" ]]; then
   echo "Output already exists: $OUT (remove it or set PS_TOUCH_AIR_OUT)." >&2
