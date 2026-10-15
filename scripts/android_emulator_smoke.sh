@@ -40,11 +40,11 @@ else
   result=$?
   echo "Instrumentation failed; collecting full device diagnostics before failing."
   adb devices -l > "$DIAG_DIR/adb-devices.txt" 2>&1 || true
-  adb shell getprop ro.build.version.sdk > "../$DIAG_DIR/android-sdk.txt" 2>&1 || true
-  adb shell dumpsys activity > "../$DIAG_DIR/activity.txt" 2>&1 || true
-  adb shell dumpsys meminfo > "../$DIAG_DIR/meminfo.txt" 2>&1 || true
-  adb logcat -d -t 12000 > "../$DIAG_DIR/logcat-full.txt" 2>&1 || true
-  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|INSTRUMENTATION|InstrumentationResultPrinter|AndroidJUnitRunner|Process .*crashed|am_crash|Fatal signal|crash_dump|lowmemorykiller|TestRunner|testInstrumentationRunner' "../$DIAG_DIR/logcat-full.txt" > "../$DIAG_DIR/logcat-filtered.txt" || true
-  tail -n 250 "../$DIAG_DIR/logcat-filtered.txt" || true
+  adb shell getprop ro.build.version.sdk > "$DIAG_DIR/android-sdk.txt" 2>&1 || true
+  adb shell dumpsys activity > "$DIAG_DIR/activity.txt" 2>&1 || true
+  adb shell dumpsys meminfo > "$DIAG_DIR/meminfo.txt" 2>&1 || true
+  adb logcat -d -t 12000 > "$DIAG_DIR/logcat-full.txt" 2>&1 || true
+  grep -E -i 'FATAL EXCEPTION|AndroidRuntime|INSTRUMENTATION|InstrumentationResultPrinter|AndroidJUnitRunner|Process .*crashed|am_crash|Fatal signal|crash_dump|lowmemorykiller|TestRunner|testInstrumentationRunner' "$DIAG_DIR/logcat-full.txt" > "$DIAG_DIR/logcat-filtered.txt" || true
+  tail -n 250 "$DIAG_DIR/logcat-filtered.txt" || true
   exit "$result"
 fi
