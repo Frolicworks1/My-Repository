@@ -1,0 +1,101 @@
+name: Build native ARM64 editor prototype
+
+on:
+  push:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+    paths:
+      - 'rebuild/android/**'
+      - 'scripts/android_emulator_smoke.sh'
+      - '.github/workflows/build-arm64-prototype.yml'
+  pull_request:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+    paths:
+      - 'rebuild/android/**'
+      - '.github/workflows/build-arm64-prototype.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: arm64-prototype-v2-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+      - name: Install Android API 36 and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build debug APK
+        working-directory: rebuild/android
+        run: gradle --no-daemon clean assembleDebug
+      - name: Verify APK structure and target SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="rebuild/android/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          python3 - "$APK" <<'PY'
+          import sys, zipfile
+          apk = sys.argv[1]
+          with zipfile.ZipFile(apk) as z:
+              names = z.namelist()
+              if not any(n.startswith("classes") and n.endswith(".dex") for n in names):
+                  raise SystemExit("APK is missing compiled DEX bytecode")
+              libs = [n for n in names if n.startswith("lib/") and n.endswith(".so")]
+              print("APK:", apk)
+              print("Bundled native libraries:", libs or "none (architecture-neutral Java app)")
+              if libs:
+                  raise SystemExit("Unexpected native libraries; review architecture before distributing")
+          PY
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package:|sdkVersion:|targetSdkVersion:"
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS-Touch-ARM64-Prototype-debug
+          path: rebuild/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Android emulator smoke test (API 35 baseline)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: default
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -memory 2048 -cores 2
+          script: |
+            sh scripts/android_emulator_smoke.sh
+      - name: Upload emulator diagnostics and instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator-diagnostics
+          path: |
+            build/ci-emulator-diagnostics/
+            rebuild/android/app/build/reports/androidTests/connected/
+            rebuild/android/app/build/outputs/androidTest-results/
+          if-no-files-found: warn
+          retention-days: 14
+
