@@ -6,6 +6,7 @@ on:
       - ps-touch-arm64-reverse-engineering
     paths:
       - 'rebuild/android/**'
+      - 'scripts/android_emulator_smoke.sh'
       - '.github/workflows/build-arm64-prototype.yml'
   pull_request:
     branches:
@@ -86,4 +87,15 @@ jobs:
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -wipe-data -no-boot-anim -memory 4096 -cores 2
           script: |
             sh scripts/android_emulator_smoke.sh
+      - name: Upload emulator diagnostics and instrumentation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator-diagnostics
+          path: |
+            build/ci-emulator-diagnostics/
+            rebuild/android/app/build/reports/androidTests/connected/
+            rebuild/android/app/build/outputs/androidTest-results/
+          if-no-files-found: warn
+          retention-days: 14
 
