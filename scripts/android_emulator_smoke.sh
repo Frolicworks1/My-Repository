@@ -1,7 +1,8 @@
 #!/bin/sh
 set -eu
 
-DIAG_DIR="build/ci-emulator-diagnostics"
+ROOT_DIR="$(pwd)"
+DIAG_DIR="$ROOT_DIR/build/ci-emulator-diagnostics"
 mkdir -p "$DIAG_DIR"
 
 echo "Waiting for Android emulator boot completion..."
@@ -38,7 +39,7 @@ if gradle --no-daemon connectedDebugAndroidTest; then
 else
   result=$?
   echo "Instrumentation failed; collecting full device diagnostics before failing."
-  adb devices -l > "../$DIAG_DIR/adb-devices.txt" 2>&1 || true
+  adb devices -l > "$DIAG_DIR/adb-devices.txt" 2>&1 || true
   adb shell getprop ro.build.version.sdk > "../$DIAG_DIR/android-sdk.txt" 2>&1 || true
   adb shell dumpsys activity > "../$DIAG_DIR/activity.txt" 2>&1 || true
   adb shell dumpsys meminfo > "../$DIAG_DIR/meminfo.txt" 2>&1 || true
