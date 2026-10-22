@@ -130,6 +130,13 @@ jobs:
       - name: Build prototype and instrumentation APKs
         working-directory: rebuild/android
         run: gradle --no-daemon clean assembleDebug assembleDebugAndroidTest
+      - name: Upload prototype APKs for quick device testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps-touch-native-prototype-apks
+          path: rebuild/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
       - name: Run image-core instrumentation tests
         if: github.event_name == 'workflow_dispatch'
         uses: reactivecircus/android-emulator-runner@v2
