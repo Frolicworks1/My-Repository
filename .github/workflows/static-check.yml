@@ -80,9 +80,7 @@ jobs:
       - name: Check Java JNI wrapper syntax
         run: |
           mkdir -p build/java-classes
-          javac -Xlint:all -Werror -d build/java-classes \\
-            rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelCore.java \\
-            rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelBuffer.java
+          javac -Xlint:all -Werror -d build/java-classes rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelCore.java rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelBuffer.java
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
