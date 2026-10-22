@@ -1,19 +1,8 @@
 name: Build native ARM64 editor prototype
 
+# This workflow builds the already-existing native prototype only.
+# Keep it manual so prototype APKs are not mistaken for the original AIR app.
 on:
-  push:
-    branches:
-      - ps-touch-arm64-reverse-engineering
-    paths:
-      - 'rebuild/android/**'
-      - 'scripts/android_emulator_smoke.sh'
-      - '.github/workflows/build-arm64-prototype.yml'
-  pull_request:
-    branches:
-      - ps-touch-arm64-reverse-engineering
-    paths:
-      - 'rebuild/android/**'
-      - '.github/workflows/build-arm64-prototype.yml'
   workflow_dispatch:
 
 concurrency:
