@@ -75,11 +75,11 @@ jobs:
           path: rebuild/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
-      - name: Android emulator smoke test (API 35 baseline)
+      - name: Android emulator smoke test (API 34 Google APIs baseline)
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
-          target: default
+          api-level: 34
+          target: google_apis
           arch: x86_64
           profile: pixel_2
           disable-animations: true
