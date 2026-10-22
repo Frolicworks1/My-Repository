@@ -51,7 +51,26 @@ public class TTPixelImageCoreTest {
             TTPixelImageCore.decode(new byte[] {1, 2, 3, 4});
             fail("Expected malformed image rejection");
         } catch (IllegalArgumentException expected) {
-            assertTrue(expected.getMessage().contains("Unsupported"));
+            assertTrue(expected.getMessage().contains("Unsupported")
+                    || expected.getMessage().contains("dimensions"));
+        }
+    }
+
+    @Test public void emptyImageBytesAreRejectedBeforeDecode() {
+        try {
+            TTPixelImageCore.decode(new byte[0]);
+            fail("Expected empty input rejection");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("empty"));
+        }
+    }
+
+    @Test public void oversizedDimensionsAreRejectedBeforeAllocation() {
+        try {
+            TTPixelImageCore.fromArgbPixels(16_385, 1, new int[0]);
+            fail("Expected dimension safety rejection");
+        } catch (IllegalArgumentException expected) {
+            assertTrue(expected.getMessage().contains("safety limit"));
         }
     }
 
