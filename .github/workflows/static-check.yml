@@ -28,7 +28,7 @@ jobs:
           sh -n scripts/android_emulator_smoke.sh
       - name: Compile static analysis tools
         run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tools/compare_apk_variants.py tools/audit_swf.py tools/prepare_original_air_workspace.py tests/test_prepare_original_air_workspace.py tests/test_ttpixel_contract.py tests/test_compare_apk_variants.py tests/test_audit_swf.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
-      - name: Test manifest decoder, ANE report, migration extractor, ARM64 gate, APK variant comparison and compiled SWF inventory and original AIR workspace preparation
+      - name: Test migration and compatibility tooling
         run: python -m unittest discover -s tests -v
       - name: Confirm private APK inputs are not committed
         run: |
@@ -100,3 +100,40 @@ jobs:
           path: build/ttpixel-arm64/libttpixel_core.so
           if-no-files-found: error
           retention-days: 7
+
+  android-image-core-instrumentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools"
+      - name: Install Android API 36 and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Build prototype and instrumentation APKs
+        working-directory: rebuild/android
+        run: gradle --no-daemon clean assembleDebug assembleDebugAndroidTest
+      - name: Run image-core instrumentation tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -memory 2048 -cores 2
+          working-directory: rebuild/android
+          script: gradle --no-daemon connectedDebugAndroidTest
