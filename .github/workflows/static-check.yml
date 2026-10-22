@@ -72,6 +72,8 @@ jobs:
           cmake -S rebuild/ane/native -B build/ttpixel-native -DCMAKE_BUILD_TYPE=Debug
           cmake --build build/ttpixel-native --parallel 2
           ctest --test-dir build/ttpixel-native --output-on-failure
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
       - name: Cross-compile Android ARM64 shared library
         run: |
           sdkmanager "ndk;27.2.12479018"
