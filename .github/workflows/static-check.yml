@@ -128,12 +128,12 @@ jobs:
       - name: Run image-core instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 30
           target: google_apis
           arch: x86_64
           profile: pixel_2
           disable-animations: true
           emulator-boot-timeout: 900
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -noaudio -memory 3072 -cores 2
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -noaudio -memory 2048 -cores 2
           working-directory: rebuild/android
           script: gradle --no-daemon connectedDebugAndroidTest
