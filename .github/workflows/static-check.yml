@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+# Keep stale emulator boots from piling up across rapid commits.
+concurrency:
+  group: ps-touch-static-check-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   python-checks:
     runs-on: ubuntu-latest
@@ -103,7 +108,7 @@ jobs:
 
   android-image-core-instrumentation:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 25
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -133,7 +138,7 @@ jobs:
           arch: x86_64
           profile: pixel_2
           disable-animations: true
-          emulator-boot-timeout: 900
+          emulator-boot-timeout: 300
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -noaudio -memory 2048 -cores 2
           working-directory: rebuild/android
           script: gradle --no-daemon connectedDebugAndroidTest
