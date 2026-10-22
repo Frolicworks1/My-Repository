@@ -84,3 +84,10 @@ jobs:
             -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
           cmake --build build/ttpixel-arm64 --parallel 2
           file build/ttpixel-arm64/libttpixel_core.so
+      - name: Preserve ARM64 core build for integration work
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttpixel-core-arm64-development
+          path: build/ttpixel-arm64/libttpixel_core.so
+          if-no-files-found: error
+          retention-days: 7
