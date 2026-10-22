@@ -8,7 +8,6 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 /**
  * Clean-room image primitives for compatibility experiments.
@@ -18,6 +17,9 @@ import java.io.IOException;
  * established from runtime traces before this core can be wired to the SWF.
  */
 public final class TTPixelImageCore {
+    private static final int MAX_DIMENSION = 16_384;
+    private static final long MAX_PIXELS = 64L * 1024L * 1024L;
+
     private TTPixelImageCore() {}
 
     public static Bitmap copy(Bitmap source) {
@@ -38,12 +40,32 @@ public final class TTPixelImageCore {
         return out.toByteArray();
     }
 
-    /** Decodes bytes without trusting dimensions until Android's decoder validates them. */
+    /**
+     * Decodes supported image bytes after checking encoded dimensions first.
+     * This avoids allocating a huge bitmap from a small, highly-compressed input.
+     */
     public static Bitmap decode(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) throw new IllegalArgumentException("Image bytes are empty");
+        if (bytes == null || bytes.length == 0) {
+            throw new IllegalArgumentException("Image bytes are empty");
+        }
+
+        BitmapFactory.Options bounds = new BitmapFactory.Options();
+        bounds.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, bounds);
+        validateDimensions(bounds.outWidth, bounds.outHeight);
+
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-        if (bitmap == null) throw new IllegalArgumentException("Unsupported or malformed image data");
-        return bitmap;
+        if (bitmap == null) {
+            throw new IllegalArgumentException("Unsupported or malformed image data");
+        }
+        // Re-check the decoded object rather than relying solely on decoder metadata.
+        try {
+            validateDimensions(bitmap.getWidth(), bitmap.getHeight());
+            return bitmap;
+        } catch (RuntimeException ex) {
+            bitmap.recycle();
+            throw ex;
+        }
     }
 
     /** Lossless PNG round trip; pixel values should remain identical for ARGB_8888 fixtures. */
@@ -53,9 +75,7 @@ public final class TTPixelImageCore {
 
     public static Bitmap resample(Bitmap source, int width, int height, boolean filtered) {
         requireBitmap(source);
-        if (width <= 0 || height <= 0) throw new IllegalArgumentException("Target dimensions must be positive");
-        long pixels = (long) width * (long) height;
-        if (pixels > 64L * 1024L * 1024L) throw new IllegalArgumentException("Target image exceeds safety limit");
+        validateDimensions(width, height);
         Bitmap out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(out);
         Paint paint = new Paint();
@@ -75,15 +95,28 @@ public final class TTPixelImageCore {
     }
 
     public static Bitmap fromArgbPixels(int width, int height, int[] pixels) {
-        if (width <= 0 || height <= 0) throw new IllegalArgumentException("Dimensions must be positive");
-        if ((long) width * height > 64L * 1024L * 1024L) throw new IllegalArgumentException("Image exceeds safety limit");
-        if (pixels == null || pixels.length != width * height) throw new IllegalArgumentException("Pixel count mismatch");
+        validateDimensions(width, height);
+        if (pixels == null || pixels.length != (long) width * height) {
+            throw new IllegalArgumentException("Pixel count mismatch");
+        }
         Bitmap out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         out.setPixels(pixels, 0, width, 0, 0, width, height);
         return out;
     }
 
+    private static void validateDimensions(int width, int height) {
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("Image dimensions must be positive");
+        }
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION
+                || (long) width * height > MAX_PIXELS) {
+            throw new IllegalArgumentException("Image exceeds safety limit");
+        }
+    }
+
     private static void requireBitmap(Bitmap bitmap) {
-        if (bitmap == null || bitmap.isRecycled()) throw new IllegalArgumentException("Bitmap is null or recycled");
+        if (bitmap == null || bitmap.isRecycled()) {
+            throw new IllegalArgumentException("Bitmap is null or recycled");
+        }
     }
 }
