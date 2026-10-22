@@ -1,0 +1,152 @@
+name: Static tooling checks
+
+on:
+  push:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+  pull_request:
+    branches:
+      - ps-touch-arm64-reverse-engineering
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Keep stale emulator boots from piling up across rapid commits.
+concurrency:
+  group: ps-touch-static-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check shell helper syntax
+        run: |
+          bash -n scripts/codespaces_preflight.sh scripts/build_original_air_arm64_diagnostic.sh scripts/capture_air_runtime_trace.sh
+          sh -n scripts/android_emulator_smoke.sh
+      - name: Compile static analysis tools
+        run: python -m py_compile tools/audit_apk.py tools/decode_axml.py tools/ane_compat_report.py tools/prepare_air_migration.py tools/arm64_build_gate.py tools/compare_apk_variants.py tools/audit_swf.py tools/prepare_original_air_workspace.py tests/test_prepare_original_air_workspace.py tests/test_ttpixel_contract.py tests/test_compare_apk_variants.py tests/test_audit_swf.py tests/test_decode_axml.py tests/test_ane_compat_report.py tests/test_prepare_air_migration.py tests/test_arm64_build_gate.py
+      - name: Test migration and compatibility tooling
+        run: python -m unittest discover -s tests -v
+      - name: Confirm private APK inputs are not committed
+        run: |
+          test -f tools/audit_apk.py
+          test -f tools/decode_axml.py
+          test -f tools/ane_compat_report.py
+          test -f tools/prepare_air_migration.py
+          test -f tools/arm64_build_gate.py
+          test -f tools/compare_apk_variants.py
+          test -f tools/audit_swf.py
+          test -f tools/prepare_original_air_workspace.py
+          test -f scripts/build_original_air_arm64_diagnostic.sh
+          test -f scripts/capture_air_runtime_trace.sh
+          test -f scripts/android_emulator_smoke.sh
+          test -f docs/CAPTURING_AIR_RUNTIME_EVIDENCE.md
+          test -f scripts/codespaces_preflight.sh
+          test -f docs/ANDROID16_BLOCKER_ANALYSIS.md
+          test -f docs/INSTALL_FAILURE_TRIAGE.md
+          test -f tests/test_decode_axml.py
+          test -f tests/test_ane_compat_report.py
+          test -f tests/test_prepare_air_migration.py
+          test -f tests/test_arm64_build_gate.py
+          test -f tests/test_compare_apk_variants.py
+          test -f tests/test_audit_swf.py
+          test -f tests/test_prepare_original_air_workspace.py
+          test -f tests/test_ttpixel_contract.py
+          test -f docs/TTPixel_ARM64_REPLACEMENT_CONTRACT.md
+          test -f rebuild/ane/ttpixel_capabilities.json
+          if find . -type f -iname '*.apk' -not -path './.git/*' | grep -q .; then
+            echo "Unexpected APK found in repository; proprietary input must stay out of Git."
+            exit 1
+          fi
+
+  native-ttpixel-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Build and test clean-room pixel core
+        run: |
+          cmake -S rebuild/ane/native -B build/ttpixel-native -DCMAKE_BUILD_TYPE=Debug
+          cmake --build build/ttpixel-native --parallel 2
+          ctest --test-dir build/ttpixel-native --output-on-failure
+      - name: Compile Java JNI wrappers
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Check Java JNI wrapper syntax
+        run: |
+          mkdir -p build/java-classes
+          javac -Xlint:all -Werror -d build/java-classes rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelCore.java rebuild/ane/android/src/main/java/com/frolicworks/ttpixel/NativePixelBuffer.java
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "ndk;27.2.12479018"
+      - name: Cross-compile Android ARM64 shared library
+        run: |
+          cmake -S rebuild/ane/native -B build/ttpixel-arm64 \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_HOME/ndk/27.2.12479018/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-23 \
+            -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/ttpixel-arm64 --parallel 2
+          file build/ttpixel-arm64/libttpixel_core.so
+      - name: Preserve ARM64 core build for integration work
+        uses: actions/upload-artifact@v4
+        with:
+          name: ttpixel-core-arm64-development
+          path: build/ttpixel-arm64/libttpixel_core.so
+          if-no-files-found: error
+          retention-days: 7
+
+  android-image-core-instrumentation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools"
+      - name: Install Android API 36 and build tools
+        run: sdkmanager "platforms;android-36" "build-tools;35.0.0"
+      - name: Set up Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+      - name: Build prototype and instrumentation APKs
+        working-directory: rebuild/android
+        run: gradle --no-daemon clean assembleDebug assembleDebugAndroidTest
+      - name: Upload prototype APKs for quick device testing
+        uses: actions/upload-artifact@v4
+        with:
+          name: ps-touch-native-prototype-apks
+          path: rebuild/android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 7
+      - name: Run image-core instrumentation tests
+        if: github.event_name == 'workflow_dispatch'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-boot-timeout: 300
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -no-boot-anim -noaudio -memory 2048 -cores 2
+          working-directory: rebuild/android
+          script: gradle --no-daemon connectedDebugAndroidTest
