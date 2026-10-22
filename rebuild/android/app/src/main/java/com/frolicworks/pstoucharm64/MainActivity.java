@@ -65,6 +65,7 @@ public final class MainActivity extends Activity {
         addTool(toolbar, "Color", () -> drawingView.nextColor());
         addTool(toolbar, "Eraser", () -> drawingView.setEraser(true));
         addTool(toolbar, "Undo", () -> drawingView.undo());
+        addTool(toolbar, "Redo", () -> drawingView.redo());
         addTool(toolbar, "Clear", () -> drawingView.clear());
         addTool(toolbar, "Save PNG", () -> saveArtwork());
 
@@ -179,6 +180,7 @@ public final class MainActivity extends Activity {
     private final class DrawingView extends View {
         private static final int INK = Color.rgb(28, 35, 52);
         private final ArrayList<Stroke> strokes = new ArrayList<>();
+        private final ArrayList<Stroke> redoStrokes = new ArrayList<>();
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
         private Stroke current;
         private boolean eraser = false;
@@ -197,6 +199,7 @@ public final class MainActivity extends Activity {
             if (backgroundImage != null && !backgroundImage.isRecycled()) backgroundImage.recycle();
             backgroundImage = bitmap;
             strokes.clear();
+            redoStrokes.clear();
             current = null;
             invalidate();
         }
@@ -213,14 +216,23 @@ public final class MainActivity extends Activity {
 
         void undo() {
             if (!strokes.isEmpty()) {
-                strokes.remove(strokes.size() - 1);
+                redoStrokes.add(strokes.remove(strokes.size() - 1));
                 invalidate();
                 status.setText("Undo • " + strokes.size() + " strokes");
             }
         }
 
+        void redo() {
+            if (!redoStrokes.isEmpty()) {
+                strokes.add(redoStrokes.remove(redoStrokes.size() - 1));
+                invalidate();
+                status.setText("Redo • " + strokes.size() + " strokes");
+            }
+        }
+
         void clear() {
             strokes.clear();
+            redoStrokes.clear();
             current = null;
             invalidate();
             status.setText("Canvas cleared");
@@ -267,6 +279,7 @@ public final class MainActivity extends Activity {
                     current = new Stroke(eraser ? Color.WHITE : palette[colorIndex], eraser ? brushSize * 4 : brushSize);
                     current.path.moveTo(x, y);
                     strokes.add(current);
+                    redoStrokes.clear();
                     invalidate();
                     return true;
                 case MotionEvent.ACTION_MOVE:
